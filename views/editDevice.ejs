@@ -1,0 +1,174 @@
+<%- include page/header %>
+		<div class="row">
+			<div class="col-md-12 column">
+				<div class="panel panel-primary">
+					<div class="panel-heading"><span class="glyphicon glyphicon-edit"></span> 裝置設定欄</div>
+					<div class="panel-body">
+						<form id="editDevice" class="form-horizontal" action="" method="post">
+							<fieldset>
+								<!-- Name input-->
+								<div class="col-md-4 column">
+									<div class="form-group">
+										<label class="col-md-4 control-label" for="name">裝置名稱</label>
+										<div class="col-md-8">
+										<input id="name" name="name" type="text" placeholder="請輸入裝置名稱"  class="form-control" required/>
+										</div>
+									</div>
+
+									<!-- Email input-->
+									<div class="form-group">
+										<label class="col-md-4 control-label" for="email">裝置MAC</label>
+										<div class="col-md-8">
+											<input id="mac" name="mac" type="text" placeholder="請輸入裝置MAC" class="form-control" required/>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-4 column">
+									<div>
+										<div class="form-group">
+											<label class="col-md-4 control-label" for="name">逾時設定</label>
+											<div class="col-md-8">
+												<input id="overtime" name="overtime" type="number" placeholder="預設2小時" class="form-control" required/>
+											</div>
+										</div>
+									</div>
+									<div >
+										<div class="form-group">
+											<label class="col-md-4 control-label" for="name">選擇類型</label>
+											<div class="col-md-8">
+												<select id="type_option" name="type_option" >
+								                    <option value="aa00">土壤溫濕度檢測</option>
+								                    <option value="aa01">氣象檢測</option>
+								                    <option value="aa03">PM2.5檢測</option>
+								                </select>
+											</div>
+										</div>
+									</div>
+
+								</div>
+								<div class="col-md-4 column">
+									<!-- Type select-->
+									<div>
+										<div class="form-group">
+											<label class="col-md-4 control-label" >&nbsp;</label>
+
+										</div>
+									</div>
+									<div class="form-group">
+										<div class="col-md-12 widget-right">
+											<!--<button type="button" onClick = "check()"class="btn btn-primary btn-md pull-right">新增裝置</button>-->
+											<% if (user.authz.a02==true) { %>
+												<button type="button" id="edit" name="edit" class="btn btn-primary btn-sm" onClick="editCheck(this)">
+													<span class="glyphicon glyphicon-edit"></span> 編輯
+												</button>
+												<button type="button" id="del" name="del" class="btn btn-danger btn-sm " onClick="delCheck(this)">
+													<span class="glyphicon glyphicon-trash"></span> 刪除
+												</button>
+												<button type="submit" id="new" name="new" class="btn btn-success btn-md">
+										    	 <span class="glyphicon glyphicon-plus pull-rightt"></span> 新增
+												</button>
+											<% }else{ %>
+
+										    	<button type="button" id="edit" name="edit" class="btn btn-default btn-md pull-right" disabled>
+										    	 新增裝置
+												</button>
+											<% } %>
+										</div>
+										<input id="mode" name="mode" type="hidden" value="new">
+										<input id="postMac" name="postMac" type="hidden"">
+										<input id="typeString" name="typeString" type="hidden" value ="土壤溫濕度檢測" >
+										<input id="units" name="units" type="hidden" value="<%= JSON.stringify(units) %>">
+									</div>
+								</div>
+
+
+							</fieldset>
+						</form>
+					</div>
+				</div>
+
+			</div><!--.col-->
+			<% if (units) { %>
+				<div class="col-md-12">
+					<table class="table table-striped table-hover">
+						<thead>
+							<tr bgcolor="#428bca">
+								<th>
+									<div class="fa fa-2x" style="color:white;">項目</div>
+								</th>
+								<th>
+									<div class="fa fa-2x" style="color:white;">裝置</div>
+								</th>
+								<th>
+									<div class="fa fa-2x" style="color:white;">MAC</div>
+								</th>
+								<th>
+									<div class="fa fa-2x" style="color:white;">裝置類型</div>
+								</th>
+								<th>
+									<div class="fa fa-2x" style="color:white;">加入時間</div>
+								</th>
+
+							</tr>
+						</thead>
+						<tbody>
+
+							<% for(var i = 0;i<units.length;i++) { %>
+								<tr class="rows">
+									<td>
+										<%= (i+1) %>
+									</td>
+									<td>
+										<%= units[i].name %>
+									</td>
+									<td>
+										<%= units[i].macAddr %>
+
+									</td>
+									<td>
+									<% if(units[i].typeString){ %>
+										<%= units[i].typeString %>
+									<% } %>
+									</td>
+									<td>
+										<%= units[i].update_at.date %>
+									</td>
+								</tr>
+							<% } %>
+
+						</tbody>
+					</table>
+
+				</div> <!-- col-md-12-->
+			<% } %>
+		</div><!--/.row-->
+
+<!-- （Modal） -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
+   aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close"
+               data-dismiss="modal" aria-hidden="true">
+                  &times;
+            </button>
+            <h4 class="modal-title" id="myModalLabel">
+               刪除裝置警告
+            </h4>
+         </div>
+         <div class="modal-body">
+            確定刪除裝置嗎?
+         </div>
+         <div class="modal-footer">
+            <button type="button" class="btn btn-default"
+               data-dismiss="modal">關閉
+            </button>
+            <button type="button" onClick="toSubmit()" class="btn btn-danger">
+               確定刪除
+            </button>
+         </div>
+      </div><!-- /.modal-content -->
+</div><!-- /.modal-dialog -->
+
+<%- include page/footer %>

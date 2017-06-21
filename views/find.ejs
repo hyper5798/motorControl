@@ -1,0 +1,108 @@
+<%- include page/header %>
+
+		<div class="panel-body">
+
+			<form method="post">
+				<div class="col-md-12">
+					<div class="form-group">
+						<label>日期</label>
+  						<!--<input id="datepicker1" name="datepicker1" type="text" value="<%= mdate %>"/>-->
+              <label>Start Date</label>
+              <input type="text" id="datepicker1" name="datepicker1" value="<%= mdate %>" size="10" readonly>
+              <input type="button" value="..." id="BTN" name="BTN">
+          </div> <!-- form-group -->
+				</div> <!-- col-md-12 -->
+
+				<div class="col-md-3">
+					<div class="form-group">
+						<label>選擇裝置</label>
+						<select id="selected_mac" name="mac">
+							<% if(units) { %>
+								<% for(var i=0;i<units.length;i++){ %>
+									<% if(units[i].type == 'aa00' || units[i].type == 'aa03' )  { %>
+									<% if(mac === units[i].macAddr){ %>
+										<option value = "<%= units[i].macAddr %>" selected>
+									<% }else{ %>
+										<option value = "<%= units[i].macAddr %>" >
+									<% } %>
+
+										<%= units[i].name %>
+										</option>
+									<% } %>
+								<% } %>
+							<% } %>
+						</select>
+					</div> <!-- form-group -->
+				</div> <!-- col-md-3 -->
+
+				<div class="col-md-3">
+					<div class="form-group">
+						<label>選擇時間</label>
+						<select "selected_time" id="time_option" name="time_option">
+							<% if(option == 0){ %>
+								<option value="0" selected>一天</option>
+							<% }else{ %>
+								<option value="0">一天</option>
+							<% } %>
+
+							<% if(option == 1){ %>
+								<option value="1" selected>一周</option>
+							<% }else{ %>
+								<option value="1">一周</option>
+							<% } %>
+
+							<% if(option == 2){ %>
+								<option value="2" selected>一個月</option>
+							<% }else{ %>
+								<option value="2">一個月</option>
+							<% } %>
+
+							<% if(option == 3){ %>
+							test
+								<option value="3" selected>三個月</option>
+							<% }else{ %>
+								<option value="3">三個月</option>
+							<% } %>
+
+						</select>
+					</div> <!-- form-group -->
+				</div> <!-- col-md-3 -->
+
+				<div class="col-md-3">
+					<div class="form-group">
+						<% if (user.authz.a05==true) { %>
+							<button type="button" name="edit" onClick="find()" class="btn btn-primary btn-sm">
+						<% }else{ %>
+							<button type="button" name="edit" class="btn btn-defaut btn-sm" disabled>
+						<% } %>
+								<span class="glyphicon glyphicon-list-alt"></span> 查詢
+							</button>
+					</div>
+				</div> <!-- col-md-3 -->
+
+			</form>
+			<div class="col-md-12">
+				<table id="table1" class="display" cellspacing="0" width="100%">
+	              <thead>
+	                <tr style="color:#428bca">
+                      <!--<td >項目</td>-->
+	                    <td >溫度</td>
+          						<td >濕度</td>
+          						<td >電壓</td>
+          						<td >時間</td>
+	                  </tr>
+	                </thead>
+	            </table>
+
+			</div> <!-- col -->
+			<div class="col-md-12 column">
+				<label id="error_message" class="checkbox">
+		            <font color="red"><b></b>
+		            <% if (user.authz.a05==false) { %>
+		                你沒有查詢權限,請通知管理員變更權限!
+		            <% } %>
+		        </label>
+			</div> <!-- column-->
+		</div> <!-- panel-body -->
+
+<%- include page/footer %>
