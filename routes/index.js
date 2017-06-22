@@ -206,6 +206,7 @@ module.exports = function(app){
 				if(password == user.password){
 					req.session.user = user;
 					return res.redirect('/');
+					//return res.redirect('/control');
 				}else{
 					//login fail
 					errorMessae = '密碼錯誤';
@@ -753,7 +754,7 @@ module.exports = function(app){
     		_max = json['max'];
     		_min = json['min'];
     	}
-    	res.render('control', { title: 'Webduino控制',
+    	res.render('control', { title: '馬達控制',
 			user:req.session.user,
 			error: null,
 			success: null,
