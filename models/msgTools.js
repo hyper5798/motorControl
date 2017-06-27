@@ -21,6 +21,8 @@ var infoPath = './public/data/deviceInfos.json';
 var unitPath = './public/data/unit.json';
 var logPath = './public/data/log.json';
 var userPath = './public/data/user.json';
+//Jason add for motor control on 2017.06.22
+var MotorCtl =  require('./motorCtl.js');
 
 //Save data
 var finalList = {};
@@ -50,7 +52,7 @@ function init(){
             return;
         var allLogs = {};
         for(var i in logs){
-            
+
             allLogs[ logs[i]['createdTime'] ]= logs[i];
         }
         JsonFileTools.saveJsonToFile(logPath,allLogs);
@@ -61,7 +63,7 @@ function init(){
             return;
         var userList = [];
         for(var i in users){
-            
+
            userList.push(users[i]['name'])
         }
         JsonFileTools.saveJsonToFile(userPath,userList);
@@ -98,11 +100,11 @@ exports.parseMsg = function (msg) {
     if(mExtra.fport>0 ){
         mInfo = parseBlazingMessage(mData,mExtra.fport);
     }else{*/
-        if(isSameTagCheck(mType,mMac,mRecv))
-            return null;
-        if(mType.indexOf('aa')!=-1)
-            mInfo = parseDefineMessage(mData,mType);
-    //}
+    /*if(isSameTagCheck(mType,mMac,mRecv))
+        return null;*/
+    if(mType.indexOf('aa')!=-1 || mType.indexOf('ab')!=-1)
+        mInfo = parseDefineMessage(mData,mType);
+//}
 
     var msg = {mac:mMac,type:mType,data:mData,recv:mRecv,date:mDate,extra:mExtra,timestamp:mTimestamp};
     /*if(mExtra.fport>0 ){
@@ -146,6 +148,14 @@ exports.setFinalList = function (list) {
 
 exports.getFinalList = function () {
     return finalList;
+}
+
+exports.getQueryCmdByMode = function (mode) {
+    return MotorCtl.getQueryCmd(mode);
+}
+
+exports.getSettingCmd = function (json) {
+    return MotorCtl.getSettingData(json);
 }
 
 exports.getNotifyDMArray = function (parseData) {
