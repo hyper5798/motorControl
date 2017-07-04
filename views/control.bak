@@ -26,7 +26,9 @@
 									<button type="button" id="edit" name="edit" class="btn btn-alert btn-md" onClick="stopMotor()">
 										<span class="glyphicon glyphicon-edit"></span> 關閉
 									</button>
-									
+									<button type="button" id="edit" name="edit" class="btn btn-primary btn-sm" onClick="startMotor()">
+										<span class="glyphicon glyphicon-edit"></span> 開啟
+									</button>
 						    </td>
 						  </tr>
 
@@ -36,19 +38,14 @@
 						    	<!--<h2>正反轉</h2>-->
 						    </td>
 						    <td width="40%">
-								  <button type="button" id="edit" name="edit" class="btn btn-primary btn-sm" onClick="startMotor()">
-										<span class="glyphicon glyphicon-edit"></span> 開啟
-									</button>
 						    	<h2><input type="hidden" id="turn" name="turn" size="3" readonly disabled></h2>
 						    </td>
 						  </tr>
 						  <tr>
 						    <td >
-								  <h2>轉速</h2>
 						    	<!--<h2>OFF Delay</h2>-->
 						    </td>
 						    <td >
-								  <h2><input id="rpm" name="rpm" type="text" maxlength="4" size="4" required/></h2>
 						    	<h2><input type="hidden" id="off_delay" name="off_delay" size="3" readonly disabled></h2>
 						    </td>
 						  </tr>
@@ -57,12 +54,6 @@
 						    	<!--<h2>ON Delay</h2>-->
 						    </td>
 						    <td>
-								  <div >
-						        	<h2>
-												<button type="button" id="edit" name="edit" class="btn btn-success btn-md" onClick="editCheck()">
-													<span class="glyphicon glyphicon-edit"></span> 設定
-												</button>
-											</h2>
 						    	<h2><input type="hidden" id="on_delay" name="on_delay" size="3" readonly disabled></h2>
 						    </td>
 						  </tr>
@@ -93,20 +84,20 @@
 						  </tr>
 						  <tr>
 						    <td >
-						    	<!--<h2>轉速</h2>-->
+						    	<h2>轉速</h2>
 						    </td>
 						    <td >
-						    	<!--<h2><input id="rpm" name="rpm" type="text" maxlength="4" size="4" required/></h2>-->
+						    	<h2><input id="rpm" name="rpm" type="text" maxlength="4" size="4" required/></h2>
 						    </td>
 						  </tr>
 						  <tr>
 						    <td colspan="2" class = 'cell'>
-						        <!--<div >
+						        <div >
 						        	<h2>
 								    	<button type="button" id="edit" name="edit" class="btn btn-success btn-md" onClick="editCheck()">
 											<span class="glyphicon glyphicon-edit"></span> 設定
 										</button>
-								    </h2>-->
+								    </h2>
 								</div>
 						    </td>
 						  </tr>
