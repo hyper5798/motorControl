@@ -1,9 +1,10 @@
-
+var settings =  require('../settings.js');
 var testDataStr  = 'ab00773F3F3030353D3C3130303F3F';
-var testDataStr2 = 'ab01783F3F3230353D3C3330303C30';
+var testDataStr2 = 'ab00783F3F3230353D3C3330303C30';
 var testData = testDataStr.toLowerCase();
-var ab00Data = { 'send_id':[6,10,1], 'mode':[10,12,1], 'rpm':[12,20,1],'turn':[20,22,1] ,'off_delay':[22,24,1],'on_delay':[24,26,1],'recv_id':[26,30,1]};
-var ab01Data = { 'send_id':[6,10,1], 'mode':[10,12,1], 'rpm':[12,20,1],'current':[20,28,1000],'error_Code':[28,30,1],};
+var ac00Data = { 'send_id':[0,4,1], 'mode':[4,6,1], 'rpm':[6,14,1],'turn':[14,16,1] ,'off_delay':[16,18,1],'on_delay':[18,20,1],'recv_id':[20,24,1]};
+var ac01Data = { 'send_id':[0,4,1], 'mode':[4,6,1], 'rpm':[6,14,1],'current':[14,22,1000],'error_Code':[22,24,1],};
+var debug = settings.debug
 //console.log(new Buffer('hello, world!').toString('hex'));
 // 轉換成十六進制字符串：68656c6c6f2c20776f726c6421
 
@@ -24,20 +25,21 @@ exports.getInfoData = getInfoData;
  * [3]:[3:2] Mode 0x2 :工程模式，詢問目前轉速值[5]~[8]、電流值[9]~[12]、Error Code[13]
  * [4]~[13] : [3:0] Default value
  */
-var queryCmd0 = '3f3f30303030303030303030';
-var queryCmd2 = '3f3f32303030303030303030';
-var settingArr1 = ["3f", "3f", "31", "30", "30", "30", "3F", "30", "30", "30", "30", "30"];
-var settingArr3 = ["3f", "3f", "33", "30", "30", "30", "30", "30", "30", "30", "30", "30"];
+var queryArr0 = ["21","3f", "3f", "30", "30", "30", "30", "30", "30", "30", "30", "30", "30", "30", "30"];
+var queryArr2 = ["21","3f", "3f", "32", "30", "30", "30", "30", "30", "30", "30", "30", "30", "30", "30"];
+
 
 function getQueryCmd(mode){
     if(mode===0){
-        return queryCmd0;
+        return arrToString(queryArr0);
     }else if(mode===2){
-        return queryCmd2;
+        return arrToString(queryArr2);
     }
 }
 
 function getSettingData(obj){
+    var settingArr1 = ["21","3f", "3f", "31", "30", "30", "30", "3F", "30", "30", "30", "30", "30", "30", "30"];
+    var settingArr3 = ["21","3f", "3f", "33", "30", "30", "30", "30", "30", "30", "30", "30", "30", "30", "30"];
     var mode = obj.mode;
     if(mode===1){
         var settingArr = settingArr1;
@@ -63,19 +65,37 @@ function getSettingData(obj){
     }else if(mode===3){
         var settingArr = settingArr3;
     }
-    var rpm = obj.rpm;
-    if(rpm){
+    
+    if(obj.rpm !== null){
+        var rpm = Number(obj.rpm);
         var rmpData = rpm.toString(16);
         for(var i= 0;i<rmpData.length;i++){
-            settingArr[(6-i)] = replaceData(settingArr[(6-i)],rmpData.charAt(rmpData.length-i-1));
+            settingArr[(7-i)] = replaceData(settingArr[(7-i)],rmpData.charAt(rmpData.length-i-1));
         }
     }
-    var settingCmd ='';
-    for(var i in settingArr){
-        settingCmd +=settingArr[i];
+    return arrToString(settingArr);
+}
+
+function arrToString(arr){
+    var sum = 0;
+    var cmd ='';
+    for(var i in arr){
+        cmd +=arr[i];
+        sum += parseInt(arr[i],16);
     }
-     console.log('settingCmd :'+settingCmd);
-     return settingCmd;
+    var sumStr = sum.toString();
+    cmd += '3'+ sumStr.substring(1,2)+'3'+sumStr.substring(2,3)+'0d';
+    //Jason add for test
+    console.log('Checksum :'+sumStr);
+    console.log('Send Command :'+cmd);
+    //Jason add for testsgTools parse json error message
+    if(debug){
+        for(var i=0;i<18;i++){
+            console.log('['+(i+1)+'] = '+cmd.substring(i*2,i*2+2) );
+        }
+    }
+
+    return cmd;
 }
 
 function replaceData(hexData,replacData){
@@ -84,12 +104,13 @@ function replaceData(hexData,replacData){
     return res;
 }
 
-function getInfoData(data,type){
+function getInfoData(data){
     var info = {};
-    if(type === 'ab00'){
-        var obj = ab00Data;
-    }else if(type === 'ab01'){
-        var obj = ab01Data;
+    var mode= data.substring(4,6);
+    if( mode === '30' || mode === '31'){
+        var obj = ac00Data;
+    }else if(mode === '32' || mode === '33'){
+        var obj = ac01Data;
     }
     var keys = Object.keys(obj);
     var count = keys.length;
@@ -107,7 +128,9 @@ function getInfoData(data,type){
     console.log( 'obj : '+ JSON.stringify(obj) );
     console.log( 'keys : '+ JSON.stringify(keys) );*/
     for(var i =0;i<count;i++){
-        console.log( keys[i]+' : '+ obj[keys[i]]);
+        if(debug){
+            console.log( keys[i]+' : '+ obj[keys[i]]);
+        }
         info[ keys[i] ] = getIntData(obj[keys[i]],data);
     }
     return info;

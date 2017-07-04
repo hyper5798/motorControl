@@ -9,7 +9,7 @@ var debug = settings.debug;
 var deviceDbTools =  require('./deviceDbTools.js');
 var unitDbTools = require('./unitDbTools.js');
 var UserDbTools =  require('./userDbTools.js');
-var mData,mMac,mRecv,mDate,mTimestamp,mType,mExtra ;
+var mData,mMac,mRecv,mDate,mTimestamp,mType,mExtra,mMode ;
 var obj;
 var overtime = 24;
 var hour = 60*60*1000;
@@ -21,6 +21,7 @@ var infoPath = './public/data/deviceInfos.json';
 var unitPath = './public/data/unit.json';
 var logPath = './public/data/log.json';
 var userPath = './public/data/user.json';
+var motorPath = './public/data/motorInfos.json';
 //Jason add for motor control on 2017.06.22
 var MotorCtl =  require('./motorCtl.js');
 
@@ -95,32 +96,78 @@ exports.parseMsg = function (msg) {
     }
     mTimestamp = new Date(mRecv).getTime();
 
-    //Parse data
-    /*Remark blazing
-    if(mExtra.fport>0 ){
-        mInfo = parseBlazingMessage(mData,mExtra.fport);
-    }else{*/
-    /*if(isSameTagCheck(mType,mMac,mRecv))
-        return null;*/
     if(mType.indexOf('aa')!=-1 || mType.indexOf('ab')!=-1)
         mInfo = parseDefineMessage(mData,mType);
-//}
 
     var msg = {mac:mMac,type:mType,data:mData,recv:mRecv,date:mDate,extra:mExtra,timestamp:mTimestamp};
-    /*if(mExtra.fport>0 ){
-        saveBlazingList(mExtra.fport,mMac,msg)
-    }else{*/
-        finalList[mMac]=msg;
-    //}
-
 
     if(mInfo){
         console.log('**** '+msg.date +' mac:'+msg.mac+' => data:'+msg.data+'\ninfo:'+JSON.stringify(mInfo));
         msg.information=mInfo;
     }
 
-    saveToDB(msg,finalList);
-    saveFinalListToFile();
+    if( mType.indexOf('ab')!=-1 && mInfo ){
+        mMode = mData.substring(10,12);
+        if(mMode === '30'){
+            var motorInfos = JsonFileTools.getJsonFromFile(motorPath);
+            motorInfos[mMac] = mInfo
+            JsonFileTools.saveJsonToFile(motorPath,motorInfos);
+        }
+   }else{
+        finalList[mMac]=msg;
+        saveToDB(msg,finalList);
+        saveFinalListToFile();
+   }
+
+    return msg;
+}
+
+//Jason add for test
+exports.parseMotorMsg = function (msg) {
+    console.log('MQTT message :\n'+JSON.stringify(msg));
+    try {
+			obj = JSON.parse(msg.toString());
+		}
+		catch (e) {
+			console.log('msgTools parse json error message #### drop :'+e.toString());
+			return null;
+		}
+    //Get data attributes
+    mData = (obj.data).substring(8,32);
+    mType = (obj.data).substring(0,4);
+    
+
+    mTimestamp = new Date(obj.time).getTime();
+
+    if(mType.indexOf('ac')!=-1){
+        mInfo = parseDefineMessage(mData,mType);
+    }else{
+        return null;
+    }
+
+    mMac  = (obj.macAddr).substring(8,16);
+    mDate = moment(obj.time).format('YYYY/MM/DD HH:mm:ss');
+        
+    var msg = {mac:mMac,type:mType,data:mData,recv:mRecv,date:mDate,timestamp:mTimestamp};
+
+    if(mInfo){
+        console.log('**** '+msg.date +' mac:'+msg.mac+' => data:'+msg.data+'\ninfo:'+JSON.stringify(mInfo));
+        msg.information=mInfo;
+    }
+
+    if( mType.indexOf('ac')!=-1 && mInfo ){
+        mMode = mData.substring(4,6);
+        msg.mode = mMode;
+        if(mMode === '30'){
+            var motorInfos = JsonFileTools.getJsonFromFile(motorPath);
+            motorInfos[mMac] = mInfo
+            JsonFileTools.saveJsonToFile(motorPath,motorInfos);
+        }
+   }else{
+        finalList[mMac]=msg;
+        saveToDB(msg,finalList);
+        saveFinalListToFile();
+   }
 
     return msg;
 }
@@ -371,8 +418,8 @@ function getType(p) {
     else return 'other';
 }
 
-function parseDefineMessage(data){
-   var mInfo = ParseDefine.getInformation(data);
+function parseDefineMessage(data,type){
+   var mInfo = ParseDefine.getTypeData(data,type);
    return mInfo;
 }
 
@@ -418,4 +465,29 @@ function isSameTagCheck(type,mac,recv){
 		console.log('**** mTag=' +mTag+'(key:' +key + '):tag='+tag +'=>'+mTag+' @@@@ save' );
 		return false;
 	}
+}
+
+exports.getMotorInitData = function (mac)
+{
+    var motorInfos = JsonFileTools.getJsonFromFile(motorPath);
+
+    if(mac){
+        var info = motorInfos[mMac] ;
+        return {"mac":mac,"info":info};
+
+    }else{
+        var keys = Object.keys(motorInfos);
+        if(keys.length>0){
+            var mac = keys[0];
+            var info = motorInfos[mac] ;
+            return {"mac":mac,"info":info};
+        }else{
+            return null;
+        }
+    }
+
+}
+
+exports.getLoraMac = function () {
+    return settings.loraMac;
 }

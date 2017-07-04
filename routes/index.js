@@ -124,12 +124,12 @@ function findUnitsAndShowNotify(req,res,isUpdate){
 }
 
 module.exports = function(app){
-  
+
   app.get('/', checkLogin);
-  
+
   app.get('/', function (req, res) {
 	//var time    = req.query.time;
-	UnitDbTools.findAllUnits(function(err,units){
+	/*UnitDbTools.findAllUnits(function(err,units){
 		var successMessae,errorMessae;
 		var macTypeMap = {};
 		if(err){
@@ -144,7 +144,7 @@ module.exports = function(app){
 		var deviceList = getDeviceList(units);
 		//Jason add for user info in index on 2017.05.15
 		var users = JsonFileTools.getJsonFromFile(userPath);
-		
+
 		res.render('index', { title: '首頁',
 			user:req.session.user,
 			units:units,
@@ -154,7 +154,8 @@ module.exports = function(app){
 			logs:logs,
 			users:users
 		});
-	});
+	});*/
+	return res.redirect('/control');
   });
 
   //Jason add for delete log on 2017.05.15
@@ -165,7 +166,7 @@ module.exports = function(app){
 		var allLogs = JsonFileTools.getJsonFromFile(logPath);
 		if(time && allLogs[time]){
 			delete allLogs[time];
-			
+
 			JsonFileTools.saveJsonToFile(logPath,allLogs);
 		}
 		return res.redirect('/');
@@ -205,8 +206,8 @@ module.exports = function(app){
 				//login success
 				if(password == user.password){
 					req.session.user = user;
-					return res.redirect('/');
-					//return res.redirect('/control');
+					//return res.redirect('/');
+					return res.redirect('/control');
 				}else{
 					//login fail
 					errorMessae = '密碼錯誤';
@@ -760,7 +761,8 @@ module.exports = function(app){
 			success: null,
 			units:null,
 			max:_max,
-			min:_min
+			min:_min,
+			mac:settings.loraMac
 		});
     });
 
@@ -860,7 +862,7 @@ function getLogList(){
 		JsonFileTools.saveJsonToFile(logPath,allLogs);
 	}else{
 		var keys = Object.keys(allLogs);
-		
+
 		for(var i = 0;i<keys.length;i++){
 			if(allLogs[keys[i]]['subject']){
 				var mArr = [];

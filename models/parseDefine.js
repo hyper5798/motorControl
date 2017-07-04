@@ -13,11 +13,13 @@ exports.getInformation = function (data) {
 
 };
 
+exports.getTypeData = getTypeData;
+
 function getTypeData(data,type){
 
-    if(type === 'ab00' || type === 'ab01' ){
+    if(type === 'ac01' ){
         //For motor control data
-        return MotorCtl.getInfoData(data,type);
+        return MotorCtl.getInfoData(data);
     }else{
         //For sensor data
         var allInfos = JsonFileTools.getJsonFromFile(infoPath);
