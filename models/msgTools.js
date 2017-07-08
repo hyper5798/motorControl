@@ -472,7 +472,7 @@ exports.getMotorInitData = function (mac)
     var motorInfos = JsonFileTools.getJsonFromFile(motorPath);
 
     if(mac){
-        var info = motorInfos[mMac] ;
+        var info = motorInfos[mac] ;
         return {"mac":mac,"info":info};
 
     }else{

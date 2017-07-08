@@ -1,10 +1,35 @@
 var host = window.location.hostname;
 var port = window.location.port;
-var rpm=0,max = 500,range = 100;;
+var rpmSetting=440,max = 440,range = 100;;
 var motor_id;
 var data,options;
 var chart;
+var myTimer,myTimeout,counter;
 var mac = document.getElementById('mac').value;
+var debug = false;
+
+if(debug === false){
+  $("#status").hide();
+}
+
+function startTimer(){
+  if(debug){
+    counter = 1;
+    myTimer = setInterval(updateTimer, 1000);
+    //Avoid without receive motor response to query again after 10 seconds
+    setTimeout(stopTimer, 30000);
+  }
+}
+
+function stopTimer(){
+  clearInterval(myTimer);
+  //clearTimeout(myTimeout);
+}
+
+function updateTimer() {
+    counter ++;
+    document.getElementById("timer").innerHTML = counter+'秒';
+}
 //alert(mac);
 
 if(location.protocol=="https:"){
@@ -24,22 +49,21 @@ function wsConn() {
       console.log("from-node-red : id:"+msg.id);
       var v = msg.v;
 
-      if(msg.id === 'get_init' ){
+      if(msg.id === 'get_query_0' ){
 
           var mac = v.mac;
           var info = v.info;
           initMotor(info);
-          var obj = {"id":"query_rpm","v":{"mac":mac}};
-          setTimeout(function(){
-              //do what you need here
-              sendWSCmd(obj);
-          }, 3000);
+          document.getElementById("status").innerHTML = 'get_init';
 
-      }else if(msg.id === 'get_rpm'){
+
+      }else if(msg.id === 'get_query_2'){
           //Set init button active
           //1:過流
           //2:霍爾故障
           //3.堵轉
+          document.getElementById("status").innerHTML = 'get_rpm';
+          stopTimer();
           var mac = v.mac;
           var info = v.info;
           currentMotor(info);
@@ -48,15 +72,20 @@ function wsConn() {
           //1:過流
           //2:霍爾故障
           //3.堵轉
-          var mac = v.mac;
-          var info = v.info;
-          currentMotor(info);
+          stopTimer();
+          changMotorGaugeRPM(rpmSetting);
+          //var mac = v.mac;
+          //var info = v.info;
+          //currentMotor(info);
+          //alert(JSON.stringify(info));
       }
     }
   }
   ws.onopen = function() {
     var obj = {"id":"init","v":{"mac":mac}};
+    document.getElementById("status").innerHTML = 'init';
     sendWSCmd(obj);
+    deayQaueyMode2();
   }
   ws.onclose   = function()  {
     console.log('Node-RED connection closed: '+new Date().toUTCString());
@@ -77,7 +106,7 @@ function drawChart() {
 
   data = google.visualization.arrayToDataTable([
     ['Label', 'Value'],
-    ['轉速', 0]
+    ['RPM', 0]
   ]);
 
   options = {
@@ -96,28 +125,21 @@ function drawChart() {
 
 $(document).ready(function(){
   $( "#rpmAlert" ).hide();
-  showDialog('連線取得資料中');
-  $('#toggle-one').bootstrapToggle({
-    on: '開啟',
-    off: '關閉'
-  });
-  $('#toggle-one').change(function() {
-    if($(this).prop('checked')){
-      //alert('開啟馬達');
-      if(rpm===0){
-        rpm = max;
-      }
-      showDialog('設定馬達中');
-      setMotor(rpm);
-      changMotorGaugeRPM(rpm);
-    }else{
-      //alert('關閉馬達');
-      showDialog('設定馬達中');
-      setMotor(0);
-      changMotorGaugeRPM(0);
-    }
-  });
+  showDialog('Connecting');
+  $myPayloadMeter = $('#payloadMeterDiv').dynameter({
+        // REQUIRED.
+        label: 'mg/L',
+        value: 6,
+        unit: '\n',
+        min: 0,
+        max: 20,
+        regions: {
+            10: 'warn',
+            15: 'error'
+        }
+    });
 });
+
 
 
 function initMotor(info){
@@ -126,9 +148,9 @@ function initMotor(info){
   google.charts.load('current', {'packages':['gauge']});
   google.charts.setOnLoadCallback(drawChart);
   if(info.turn === 0){
-    document.getElementById('turn').value = '正轉';
+    document.getElementById('turn').value = 'Forward';
   }else{
-    document.getElementById('turn').value = '反轉';
+    document.getElementById('turn').value = 'Reverse';
   }
   var off_delay = info.off_delay;
   var on_delay = info.on_delay;
@@ -138,46 +160,40 @@ function initMotor(info){
 }
 
 function currentMotor(info){
-  rpm = info.rpm;
   //1:過流
   //2:霍爾故障
   //3.堵轉
-  var errorMsg = "無";
+  var errorMsg = "OK";
   if(info.error_Code === 1){
-    errorMsg = '過流';
+    errorMsg = 'Overcurrent';
   }else if(info.error_Code === 2){
-    errorMsg = '霍爾故障';
+    errorMsg = 'Hall failure';
   }else if(info.error_Code === 3){
-    errorMsg = '堵轉';
+    errorMsg = 'Stalled';
+  }
+  if(info.rpm === 0){
+    rpmSteeing = max;
+  }else{
+     rpmSteeing = info.rpm;
   }
 
-  document.getElementById('rpm').value = info.rpm;
+  document.getElementById('rpm').value = rpmSteeing;
   document.getElementById('current').value = info.current;
   document.getElementById('code').value = errorMsg;
-  changMotorGaugeRPM(rpm);
-}
-
-function editCheck(){
-
-  rpm = document.getElementById('rpm').value;
-  if(rpm>max){
-
-     rpm = max;
-     document.getElementById('rpm').value = rpm;
-     showAlert();
-  }
-  //changMotorGaugeRPM(rpm)
-  $('#toggle-one').bootstrapToggle('on');
+  changMotorGaugeRPM(info.rpm);
 }
 
 function setMotor(rpm){
-  var json = {"rpm":rpm,"mac":mac};
-  var obj = {"id":"setMotor","v":rpm};
+  rpmSetting = rpm;
+  showDialog('設定馬達中');
+  var json = {"rpm":rpmSetting,"mac":mac};
+  var obj = {"id":"setMotor","v":json};
   sendWSCmd(obj);
+  deayQaueyMode2();
+  startTimer();
 }
 
 function changMotorGaugeRPM(rpm){
-
   data.setValue(0, 1, rpm);
   chart.draw(data, options);
 }
@@ -187,7 +203,7 @@ function showDialog(message){
     //waitingDialog.show();
     setTimeout(function () {
       waitingDialog.hide();
-      },5000);
+      },10000);
 }
 
 function showAlert(){
@@ -207,4 +223,13 @@ function sendWSCmd(obj){
   ws.send(getRequest);      // Request ui status from NR
   console.log(getRequest);
 
+}
+
+function deayQaueyMode2(){
+  var obj = {"id":"query_mode_2","v":{"mac":mac}};
+  setTimeout(function(){
+      //do what you need here
+      sendWSCmd(obj);
+      //document.getElementById("status").innerHTML = 'query_rpm';
+  }, 2000);
 }

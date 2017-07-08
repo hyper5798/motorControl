@@ -14,6 +14,7 @@ module.exports = {
   debug:true,
   Segmentation:',',
   loraMac:'0000000005010336',
+  //loraMac:'00000000040003a9',
   verify_token:'EAAZAUEZCqWVsABAKczbXolA9ElqDIDysFFjII7XxRoHS6ytVbKw8jaIOgIyeGir0qZCFZBm2kbSlYNXO3xSfoAsB712qf3KZB7Dle6ocE3xVoIuuTnxvvlDDWkqHudRYH4x9WwuMYOmFRRNMg40yTWQmSnjFEepoePLJdoqLwxAZDZD',
   page_token:'EAAZAUEZCqWVsABAKczbXolA9ElqDIDysFFjII7XxRoHS6ytVbKw8jaIOgIyeGir0qZCFZBm2kbSlYNXO3xSfoAsB712qf3KZB7Dle6ocE3xVoIuuTnxvvlDDWkqHudRYH4x9WwuMYOmFRRNMg40yTWQmSnjFEepoePLJdoqLwxAZDZD'
 };
